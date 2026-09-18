@@ -1,13 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fantasy Cruncher - MLB DFS Optimizer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Cruncher - MLB DFS Optimizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-<p>Loading Fantasy Cruncher...</p>
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">&#9918;</span>
+                    <span class="logo-text">Fantasy<span class="logo-highlight">Cruncher</span></span>
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="site-selector">
+                    <button class="site-btn active" data-site="draftkings">DraftKings</button>
+                    <button class="site-btn" data-site="fanduel">FanDuel</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="topbar-field">
+                    <label for="numLineups">Lineups</label>
+                    <input type="number" id="numLineups" value="20" min="1" max="150">
+                </div>
+                <div class="topbar-field">
+                    <label for="maxVsSP">Max V SP</label>
+                    <input type="number" id="maxVsSP" value="0" min="0" max="10" title="Max batters in a lineup facing the same opposing starting pitcher (0 = no limit)">
+                </div>
+                <button class="btn btn-outline" id="importBtn">Import CSV</button>
+                <button class="btn btn-outline" id="exposureBtn">Exposure</button>
+                <button class="btn btn-primary" id="optimizeBtn">Optimize Lineups</button>
+                <input type="file" id="fileInput" accept=".csv" hidden>
+            </div>
+        </header>
+
+        <main class="main">
+            <aside class="panel panel-left">
+                <div class="panel-header">
+                    <h2>Player Pool</h2>
+                    <div class="search-box">
+                        <input type="text" id="playerSearch" placeholder="Search players...">
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Position</label>
+                        <div class="position-filters" id="positionFilters"></div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Salary Range</label>
+                        <div class="range-inputs">
+                            <input type="number" id="salaryMin" placeholder="Min" min="0">
+                            <span>to</span>
+                            <input type="number" id="salaryMax" placeholder="Max" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="player-list-header">
+                    <span class="col-lock"></span>
+                    <span class="col-pos">Pos</span>
+                    <span class="col-name">Player</span>
+                    <span class="col-team">Tm</span>
+                    <span class="col-salary">Sal</span>
+                    <span class="col-fpts">Proj</span>
+                    <span class="col-exp">Exp</span>
+                </div>
+                <div class="player-list" id="playerList">
+                    <div class="empty-state">
+                        <div class="empty-icon">&#9918;</div>
+                        <p>Import a CSV file to get started</p>
+                        <button class="btn btn-outline" onclick="document.getElementById('importBtn').click()">Import Now</button>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="splitter" id="splitterLeft" title="Drag to resize"></div>
+
+            <section class="panel panel-center">
+                <div class="panel-header">
+                    <h2>Lineup Builder</h2>
+                    <div class="lineup-actions">
+                        <button class="btn btn-sm btn-outline" id="clearLineup">Clear</button>
+                        <button class="btn btn-sm btn-outline" id="saveLineup">Save</button>
+                    </div>
+                </div>
+
+                <div class="salary-bar">
+                    <div class="salary-info">
+                        <span class="salary-label">Remaining Salary</span>
+                        <span class="salary-amount" id="remainingSalary">$50,000</span>
+                    </div>
+                    <div class="salary-progress">
+                        <div class="salary-progress-bar" id="salaryProgress"></div>
+                    </div>
+                    <div class="salary-info">
+                        <span class="salary-label">Avg / Player</span>
+                        <span class="salary-amount" id="avgSalary">$5,000</span>
+                    </div>
+                </div>
+
+                <div class="lineup-grid" id="lineupGrid"></div>
+
+                <div class="lineup-summary">
+                    <div class="summary-row">
+                        <span>Projected Points:</span>
+                        <span class="summary-value" id="totalProjection">0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Projected Value:</span>
+                        <span class="summary-value" id="totalValue">0.0x</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="splitter" id="splitterRight" title="Drag to resize"></div>
+
+            <aside class="panel panel-right">
+                <div class="panel-header">
+                    <h2>Optimization</h2>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Stack Builder</h3>
+                    <div id="stackSettings"></div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Team Constraints</h3>
+                    <div id="teamConstraints">
+                        <p style="color: var(--text-muted); font-size: 12px;">Import players to see team constraints</p>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Lineup Constraints</h3>
+                    <div class="setting-item">
+                        <label>Max Ownership Sum</label>
+                        <input type="number" id="maxOwnership" value="400" min="100" max="900">
+                    </div>
+                    <div class="setting-item">
+                        <label>Randomness</label>
+                        <input type="range" id="randomness" min="0" max="100" value="10">
+                        <span class="range-value" id="randomnessValue">10%</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Optimization Mode</h3>
+                    <div class="setting-item checkbox">
+                        <input type="radio" name="optMode" id="useFpts" value="fpts" checked>
+                        <label for="useFpts">Projected Points</label>
+                    </div>
+                    <div class="setting-item checkbox">
+                        <input type="radio" name="optMode" id="useCeiling" value="ceiling">
+                        <label for="useCeiling">Ceiling (Upside)</label>
+                    </div>
+                    <div class="setting-item checkbox">
+                        <input type="radio" name="optMode" id="useFloor" value="floor">
+                        <label for="useFloor">Floor (Safety)</label>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <div class="modal" id="playerModal">
+            <div class="modal-content modal-player">
+                <div class="modal-header">
+                    <h2>Edit Player</h2>
+                    <button class="modal-close" id="closePlayerModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="player-edit-form" id="playerEditForm"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="cancelPlayerEdit">Cancel</button>
+                    <button class="btn btn-primary" id="savePlayerEdit">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="lineupsModal">
+            <div class="modal-content modal-wide">
+                <div class="modal-header">
+                    <h2>Optimized Lineups</h2>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="lineups-list" id="lineupsList"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="exportLineups">Export CSV</button>
+                    <button class="btn btn-primary" id="closeModalBtn">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="exposureModal">
+            <div class="modal-content modal-wide">
+                <div class="modal-header">
+                    <h2>Exposure Report</h2>
+                    <button class="modal-close" id="closeExposureModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="exposure-table-container">
+                        <table class="exposure-table" id="exposureTable">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Pos</th>
+                                    <th>Team</th>
+                                    <th>Salary</th>
+                                    <th>Projection</th>
+                                    <th>Exposure</th>
+                                    <th>Target Min</th>
+                                    <th>Target Max</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exposureTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" id="exportExposure">Export Exposure</button>
+                    <button class="btn btn-primary" id="closeExposureBtn">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="init.js"></script>
 </body>
 </html>
