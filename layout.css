@@ -1,1 +1,135 @@
-body { margin: 0; }
+/* Splitter handles + top bar field */
+.splitter {
+    width: 6px;
+    flex: 0 0 6px;
+    cursor: col-resize;
+    background: var(--bg-primary);
+    position: relative;
+    z-index: 50;
+    transition: background 0.15s ease;
+}
+
+.splitter:hover,
+.splitter.dragging {
+    background: var(--accent-primary);
+}
+
+.splitter::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    border-radius: 2px;
+    background: var(--border-color);
+}
+
+.splitter:hover::after,
+.splitter.dragging::after {
+    background: var(--accent-secondary);
+}
+
+.topbar-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.topbar-field label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.topbar-field input {
+    width: 68px;
+    padding: 5px 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    text-align: center;
+}
+
+.topbar-field input:focus {
+    border-color: var(--accent-primary);
+}
+
+body.resizing {
+    cursor: col-resize;
+    user-select: none;
+}
+
+body.resizing iframe,
+body.resizing * {
+    pointer-events: none;
+}
+
+body.resizing .splitter {
+    pointer-events: auto;
+}
+
+/* ==================== TEAM COLOR CHIPS ==================== */
+.team-chip {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+/* ==================== LOCKED LINEUP SLOT ==================== */
+.slot-lock-badge {
+    font-size: 11px;
+    margin-right: 3px;
+    vertical-align: middle;
+}
+
+.lineup-slot.locked {
+    border-color: var(--accent-warning);
+    background: rgba(245, 158, 11, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.35);
+}
+
+.lineup-slot.locked .slot-position {
+    background: var(--accent-warning);
+    color: #0f172a;
+}
+
+/* ==================== CUSTOM COLUMN CELLS ==================== */
+.col-x {
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+}
+
+.col-x.active-col {
+    color: var(--accent-secondary);
+    font-weight: 700;
+}
+
+.col-fpts.active-col {
+    color: var(--accent-secondary);
+    font-weight: 700;
+}
+
+.player-list-header,
+.player-item {
+    grid-template-columns: 26px 36px 1fr 46px 58px 44px 40px 40px 40px 56px !important;
+}
